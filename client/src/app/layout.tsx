@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
+import { Header } from "@/widgets/header";
 
 export const metadata: Metadata = {
-  title: "Full-Stack App",
-  description: "Next.js + Go + PostgreSQL",
+  title: "Портфолио | Kyureno",
+  description: "Персональный сайт-портфолио разработчика",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -12,8 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased">{children}</body>
+    <html lang="ru" suppressHydrationWarning>
+      <body className="antialiased bg-background dark:bg-dark-bg text-primary dark:text-dark-primary transition-colors duration-300">
+        <Providers>
+          <Header />
+          <main className="pt-24 min-h-screen">
+            {children}
+          </main>
+        </Providers>
+      </body>
     </html>
   );
 }
