@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className="antialiased bg-background dark:bg-dark-bg text-primary dark:text-dark-primary transition-colors duration-300">
         <Providers>
           <Header />
-          <main className="pt-24 min-h-screen">
+          <main className="min-h-screen">
             {children}
           </main>
         </Providers>
