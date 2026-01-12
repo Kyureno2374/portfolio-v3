@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { trackLanguage } from "./analytics";
 
 type Language = "ru" | "en";
 
@@ -15,7 +16,12 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("ru");
+  const [language, setLanguageState] = useState<Language>("ru");
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    trackLanguage(lang);
+  };
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>

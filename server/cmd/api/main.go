@@ -23,16 +23,10 @@ func main() {
 		port = "8080"
 	}
 
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		dbURL = "postgres://user:pass@localhost:5432/dbname"
-	}
-
-	repo, err := repository.NewPostgresRepository(context.Background(), dbURL)
+	// Content repository (JSON file)
+	contentRepo, err := repository.NewContentRepository("data/content.json")
 	if err != nil {
-		log.Printf("Warning: Could not connect to database: %v", err)
-	} else {
-		defer repo.Close()
+		log.Fatalf("Failed to init content repository: %v", err)
 	}
 
 	r := chi.NewRouter()
@@ -41,18 +35,37 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://kyureno.dev"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Admin-Password"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
-	h := handler.NewHandler(repo)
+	contentHandler := handler.NewContentHandler(contentRepo)
 
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/health", h.HealthCheck)
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{"status":"ok"}`))
+		})
+
+		// Public routes
+		r.Get("/content", contentHandler.GetAll)
+		r.Get("/content/about", contentHandler.GetAbout)
+		r.Get("/content/projects", contentHandler.GetProjects)
+		r.Get("/content/skills", contentHandler.GetSkills)
+		r.Get("/content/contacts", contentHandler.GetContacts)
+
+		// Protected routes
+		r.Group(func(r chi.Router) {
+			r.Use(contentHandler.AuthMiddleware)
+			r.Put("/content/about", contentHandler.UpdateAbout)
+			r.Put("/content/projects", contentHandler.UpdateProjects)
+			r.Put("/content/skills", contentHandler.UpdateSkills)
+			r.Put("/content/contacts", contentHandler.UpdateContacts)
+		})
 	})
 
 	srv := &http.Server{

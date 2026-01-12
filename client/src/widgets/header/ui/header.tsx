@@ -142,7 +142,6 @@ export function Header() {
             </div>
           </LiquidGlass>
 
-          {/* Мобильное меню - вынесено за пределы LiquidGlass */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.div

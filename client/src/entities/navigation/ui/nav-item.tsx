@@ -37,7 +37,6 @@ export function NavItem({ item, showLabel = true }: NavItemProps) {
         initial="initial"
         animate={isActive ? "active" : "initial"}
       >
-        {/* Фоновая подсветка */}
         <motion.div
           className="absolute inset-0 rounded-xl bg-white/15 dark:bg-white/10"
           variants={{
@@ -48,7 +47,6 @@ export function NavItem({ item, showLabel = true }: NavItemProps) {
           transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
         />
         
-        {/* Свечение при активном состоянии */}
         {isActive && (
           <motion.div
             className="absolute inset-0 rounded-xl"
@@ -60,7 +58,6 @@ export function NavItem({ item, showLabel = true }: NavItemProps) {
           />
         )}
         
-        {/* Иконка */}
         <motion.div
           className="relative z-10"
           variants={{
@@ -73,7 +70,6 @@ export function NavItem({ item, showLabel = true }: NavItemProps) {
           <Icon className="w-4 h-4" />
         </motion.div>
         
-        {/* Текст */}
         {showLabel && (
           <motion.span
             className="relative z-10"

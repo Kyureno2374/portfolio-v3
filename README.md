@@ -1,28 +1,27 @@
-# Portfolio
+# Portfolio v3
 
-Персональный сайт-портфолио разработчика.
+Персональный сайт-портфолио с админкой для редактирования контента.
 
 ## Стек
 
-- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS, Framer Motion
-- Backend: Go (chi router)
-- База данных: PostgreSQL 16
+**Frontend:**
+- Next.js 15 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS
+- Framer Motion
 
-## Требования
+**Backend:**
+- Go (chi router)
+- JSON file storage
 
-- Node.js 18+
-- Go 1.21+
-- Docker
+**Инфраструктура:**
+- Docker (PostgreSQL)
+- GitHub Actions
 
 ## Запуск
 
-### 1. База данных
-
-```bash
-docker-compose up -d
-```
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd client
@@ -30,65 +29,53 @@ npm install
 npm run dev
 ```
 
-Клиент: http://localhost:3000
+Открыть http://localhost:3000
 
-### 3. Backend
+### Backend
 
 ```bash
 cd server
 go run cmd/api/main.go
 ```
 
-Сервер: http://localhost:8080
+API доступен на http://localhost:8080
 
-## Структура клиента (FSD)
+### База данных (опционально)
 
-```
-client/src/
-├── app/           # Next.js App Router
-├── widgets/       # Композиционные блоки (Header)
-├── features/      # Фичи (ThemeToggle, LanguageSwitcher)
-├── entities/      # Сущности (Navigation)
-└── shared/        # Переиспользуемый код (UI, lib, config)
+```bash
+docker-compose up -d
 ```
 
-## Дизайн и анимации
+## Переменные окружения
 
-### Liquid Glass (Apple macOS Tahoe)
+**client/.env.local:**
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+ADMIN_PASSWORD=your_password
+```
 
-Реализован стиль "жидкое стекло" по гайдлайнам Apple:
+**server/.env:**
+```
+SERVER_PORT=8080
+ADMIN_PASSWORD=your_password
+```
 
-- Динамическая прозрачность с `backdrop-filter: blur() saturate(180%)`
-- Градиентное преломление света, реагирующее на позицию курсора
-- Внутренние и внешние тени для эффекта глубины и парения
-- Интерактивное свечение при наведении (radial-gradient)
-- GPU-ускорение через `transform: translateZ(0)` и `will-change`
+## Структура
 
-### Параметры LiquidGlass компонента
+```
+client/           # Next.js приложение (FSD архитектура)
+  src/
+    app/          # Страницы
+    widgets/      # Виджеты (Header, Footer)
+    features/     # Фичи (ThemeToggle, MusicPlayer)
+    entities/     # Сущности (Navigation)
+    shared/       # Общий код (UI, API, lib)
 
-- `displacementScale` (0-5): интенсивность искажения
-- `blurAmount` (0-3): сила размытия фона
-- `elasticity` (0-1): плавность анимаций
-- `cornerRadius`: радиус скругления
-- `isInteractive`: включение hover-эффектов
-
-### Анимации
-
-- Переключение темы: иконки вращаются на 180° с плавным fade
-- Навигация: активная вкладка с spring-анимацией и стеклянным фоном
-- Hover-эффекты: scale(1.02-1.05) с динамическим свечением
-- Мобильное меню: каскадная анимация элементов
-- Выпадающий список: появление с scale + fade
-
-### Доступность
-
-- Поддержка `prefers-reduced-motion` для пользователей с чувствительностью к движению
-- ARIA-атрибуты для интерактивных элементов
-- Семантическая разметка
-
-## Настройка
-
-Добавьте файл `client/public/logo.png` с вашим логотипом (рекомендуемый размер: 80x80px).
+server/           # Go API
+  cmd/api/        # Точка входа
+  internal/       # Внутренняя логика
+  data/           # JSON хранилище
+```
 
 ## Лицензия
 

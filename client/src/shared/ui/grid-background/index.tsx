@@ -23,12 +23,11 @@ export const GridBackground = memo(function GridBackground() {
         </video>
       </div>
 
-      {/* Статичный фон для светлой темы - без анимаций для производительности */}
+      {/* Статичный фон для светлой темы */}
       <div
         className="fixed inset-0 -z-20 bg-[#fafafa] transition-opacity duration-700 ease-in-out overflow-hidden"
         style={{ opacity: theme === "light" ? 1 : 0 }}
       >
-        {/* Градиентные пятна - статичные */}
         <div
           className="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[120px]"
           style={{
@@ -56,7 +55,6 @@ export const GridBackground = memo(function GridBackground() {
           }}
         />
 
-        {/* Тонкая сетка */}
         <div
           className="absolute inset-0 opacity-[0.025]"
           style={{
@@ -68,7 +66,6 @@ export const GridBackground = memo(function GridBackground() {
           }}
         />
 
-        {/* Виньетка */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
