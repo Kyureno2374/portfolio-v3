@@ -1,38 +1,121 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { FaCode, FaGraduationCap } from "react-icons/fa";
 import { useLanguage } from "@/shared/lib/language-context";
+import { useTheme } from "@/shared/lib/theme-context";
+import { skillCategories } from "@/shared/config/skills";
+import { SkillCard } from "@/shared/ui/skill-card";
+
+const pageContent = {
+  ru: {
+    title: "Мои скиллы",
+    description: "Создаю быстрые, надежные и масштабируемые веб-платформы. На фронтенде использую TypeScript, React и Next.js, на бэкенде — Go, Python и Node.js. Имею опыт работы с CI/CD, контейнеризацией и современными средами развертывания. Стремлюсь к эффективной и удобной в поддержке инфраструктуре.",
+  },
+  en: {
+    title: "My Skills",
+    description: "I build fast, reliable and scalable web platforms. On the frontend I use TypeScript, React and Next.js, on the backend — Go, Python and Node.js. I have experience with CI/CD, containerization and modern deployment environments. I strive for efficient and maintainable infrastructure.",
+  },
+};
 
 export default function SkillsPage() {
   const { language } = useLanguage();
-
-  const skills = ["TypeScript", "React", "Next.js", "Go", "PostgreSQL", "Tailwind CSS"];
+  const { theme } = useTheme();
+  const content = pageContent[language];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h1 className="text-4xl md:text-5xl font-bold mb-6">
-          {language === "ru" ? "Скиллы" : "Skills"}
-        </h1>
-        <div className="flex flex-wrap gap-3">
-          {skills.map((skill, index) => (
-            <motion.div
-              key={skill}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              className="px-4 py-2 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-glass
-                border border-black/10 dark:border-white/10 font-medium"
-            >
-              {skill}
-            </motion.div>
-          ))}
+    <>
+      {/* Видео фон */}
+      <div className="fixed inset-0 -z-20">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+          style={{ opacity: theme === "dark" ? 1 : 0 }}
+        >
+          <source src="/grid.mp4" type="video/mp4" />
+        </video>
+      </div>
+
+      <div
+        className="fixed inset-0 -z-20 bg-background transition-opacity duration-700 ease-in-out"
+        style={{ opacity: theme === "light" ? 1 : 0 }}
+      />
+
+      <div
+        className="fixed inset-0 -z-10 bg-gradient-to-b from-dark-bg/70 via-dark-bg/50 to-dark-bg/80 transition-opacity duration-700 ease-in-out"
+        style={{ opacity: theme === "dark" ? 1 : 0 }}
+      />
+
+      {/* Контент */}
+      <div className="min-h-screen px-6 py-24 md:py-32">
+        <div className="max-w-5xl mx-auto">
+          {/* Заголовок */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-center mb-12 md:mb-16"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <FaCode className="w-8 h-8 text-primary dark:text-dark-primary" />
+              <h1 className="text-4xl md:text-5xl font-bold text-primary dark:text-dark-primary">
+                {content.title}
+              </h1>
+            </div>
+            <p className="text-base md:text-lg text-secondary dark:text-dark-secondary max-w-2xl mx-auto leading-relaxed">
+              {content.description}
+            </p>
+          </motion.div>
+
+          {/* Категории скиллов */}
+          <div className="space-y-12">
+            {skillCategories.map((category, categoryIndex) => (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: categoryIndex * 0.15,
+                  duration: 0.5,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+              >
+                {/* Заголовок категории */}
+                <h2 className="text-xl md:text-2xl font-semibold text-primary dark:text-dark-primary mb-6 flex items-center gap-3">
+                  {category.isLearning ? (
+                    <>
+                      <div className="w-1 h-6 rounded-full bg-gradient-to-b from-green-500 to-emerald-500" />
+                      <FaGraduationCap className="w-5 h-5 text-green-500" />
+                    </>
+                  ) : (
+                    <div className="w-1 h-6 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+                  )}
+                  {language === "ru" ? category.titleRu : category.titleEn}
+                  {category.isLearning && (
+                    <span className="ml-2 px-2 py-0.5 text-xs font-medium text-green-500 bg-green-500/10 rounded-full border border-green-500/20">
+                      {language === "ru" ? "в процессе" : "in progress"}
+                    </span>
+                  )}
+                </h2>
+
+                {/* Сетка скиллов */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {category.skills.map((skill, skillIndex) => (
+                    <SkillCard
+                      key={skill.name}
+                      skill={skill}
+                      index={skillIndex}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </>
   );
 }
