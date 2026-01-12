@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaGithub, FaBars, FaTimes } from "react-icons/fa";
 import { ThemeToggle } from "@/features/theme-toggle";
 import { LanguageSwitcher } from "@/features/language-switcher";
+import { MusicPlayer } from "@/features/music-player";
 import { NavItem } from "@/entities/navigation";
 import { navigationItems } from "@/shared/config";
 import { LiquidGlass } from "@/shared/ui/liquid-glass";
@@ -76,7 +77,8 @@ export function Header() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <MusicPlayer />
                     <ThemeToggle />
                     
                     <motion.div

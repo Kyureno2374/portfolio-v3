@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaUser, FaFolder, FaCode, FaEnvelope } from "react-icons/fa";
+import { FaFolder, FaCode, FaEnvelope } from "react-icons/fa";
 import { NavItem as NavItemType } from "@/shared/config";
 import { useLanguage } from "@/shared/lib/language-context";
 
 const iconMap = {
-  user: FaUser,
   folder: FaFolder,
   code: FaCode,
   envelope: FaEnvelope,

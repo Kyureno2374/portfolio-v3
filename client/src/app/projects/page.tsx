@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { FaFolderOpen } from "react-icons/fa";
 import { useLanguage } from "@/shared/lib/language-context";
-import { useTheme } from "@/shared/lib/theme-context";
 import { projects } from "@/shared/config/projects";
 import { ProjectCard } from "@/shared/ui/project-card";
+import { GridBackground } from "@/shared/ui/grid-background";
 
 // TODO: Перенести в БД для редактирования через админку
 const pageContent = {
@@ -21,34 +21,11 @@ const pageContent = {
 
 export default function ProjectsPage() {
   const { language } = useLanguage();
-  const { theme } = useTheme();
   const content = pageContent[language];
 
   return (
     <>
-      {/* Видео фон */}
-      <div className="fixed inset-0 -z-20">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{ opacity: theme === "dark" ? 1 : 0 }}
-        >
-          <source src="/grid.mp4" type="video/mp4" />
-        </video>
-      </div>
-
-      <div 
-        className="fixed inset-0 -z-20 bg-background transition-opacity duration-700 ease-in-out"
-        style={{ opacity: theme === "light" ? 1 : 0 }}
-      />
-
-      <div 
-        className="fixed inset-0 -z-10 bg-gradient-to-b from-dark-bg/70 via-dark-bg/50 to-dark-bg/80 transition-opacity duration-700 ease-in-out"
-        style={{ opacity: theme === "dark" ? 1 : 0 }}
-      />
+      <GridBackground />
 
       {/* Контент */}
       <div className="min-h-screen px-6 py-24 md:py-32">
