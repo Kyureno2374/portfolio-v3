@@ -26,6 +26,10 @@ export function MusicPlayer() {
     cover: null,
   });
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
+  const [isDraggingProgress, setIsDraggingProgress] = useState(false);
+  const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
   useEffect(() => {
     const loadMetadata = async () => {
@@ -69,7 +73,9 @@ export function MusicPlayer() {
     });
 
     audio.addEventListener("timeupdate", () => {
-      setCurrentTime(audio.currentTime);
+      if (!isDraggingProgress) {
+        setCurrentTime(audio.currentTime);
+      }
     });
 
     audio.addEventListener("ended", () => {
@@ -82,11 +88,10 @@ export function MusicPlayer() {
       audio.pause();
       audio.src = "";
     };
-  }, []);
+  }, [isDraggingProgress]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
-    
     if (isPlaying) {
       audioRef.current.pause();
     } else {
@@ -95,28 +100,80 @@ export function MusicPlayer() {
     setIsPlaying(!isPlaying);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !duration) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
+  // Progress bar handlers
+  const handleProgressChange = (clientX: number) => {
+    if (!progressRef.current || !audioRef.current || !duration) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const newTime = percent * duration;
-    audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
+    audioRef.current.currentTime = newTime;
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-    if (newVolume > 0) setIsMuted(false);
+  const handleProgressMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingProgress(true);
+    handleProgressChange(e.clientX);
   };
+
+  const handleProgressTouchStart = (e: React.TouchEvent) => {
+    setIsDraggingProgress(true);
+    handleProgressChange(e.touches[0].clientX);
+  };
+
+  // Volume handlers
+  const handleVolumeChange = (clientX: number) => {
+    if (!volumeRef.current) return;
+    const rect = volumeRef.current.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    setVolume(percent);
+    if (audioRef.current) {
+      audioRef.current.volume = percent;
+    }
+    if (percent > 0) setIsMuted(false);
+  };
+
+  const handleVolumeMouseDown = (e: React.MouseEvent) => {
+    setIsDraggingVolume(true);
+    handleVolumeChange(e.clientX);
+  };
+
+  const handleVolumeTouchStart = (e: React.TouchEvent) => {
+    setIsDraggingVolume(true);
+    handleVolumeChange(e.touches[0].clientX);
+  };
+
+  // Global mouse/touch move and up
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingProgress) handleProgressChange(e.clientX);
+      if (isDraggingVolume) handleVolumeChange(e.clientX);
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDraggingProgress) handleProgressChange(e.touches[0].clientX);
+      if (isDraggingVolume) handleVolumeChange(e.touches[0].clientX);
+    };
+    const handleEnd = () => {
+      setIsDraggingProgress(false);
+      setIsDraggingVolume(false);
+    };
+
+    if (isDraggingProgress || isDraggingVolume) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleEnd);
+      window.addEventListener("touchmove", handleTouchMove);
+      window.addEventListener("touchend", handleEnd);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleEnd);
+    };
+  }, [isDraggingProgress, isDraggingVolume, duration]);
 
   const toggleMute = () => {
     if (!audioRef.current) return;
-    
     if (isMuted) {
       audioRef.current.volume = volume;
       setIsMuted(false);
@@ -133,20 +190,18 @@ export function MusicPlayer() {
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
+  const volumePercent = isMuted ? 0 : volume * 100;
 
   return (
     <div className="relative">
-      {/* Кнопка музыки - без обводки, как GitHub */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         className="relative w-10 h-10 flex items-center justify-center rounded-xl
-          hover:bg-white/10 dark:hover:bg-white/5
-          transition-colors duration-300"
+          hover:bg-white/10 dark:hover:bg-white/5 transition-colors duration-300"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Music player"
       >
-        {/* Иконка с glow внутри когда играет */}
         <FaMusic 
           className={`w-5 h-5 transition-all duration-300 ${
             isPlaying && !isOpen 
@@ -156,55 +211,50 @@ export function MusicPlayer() {
         />
       </motion.button>
 
-      {/* Мини-плеер */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute right-0 sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-72 max-w-72 z-50"
-            style={{ right: "max(-1rem, calc(-50vw + 50% + 1rem))" }}
-          >
-            <div className="p-4 rounded-2xl 
-              bg-white/80 dark:bg-black/50 
-              backdrop-blur-xl 
-              border border-black/10 dark:border-white/10 
-              shadow-xl shadow-black/10 dark:shadow-black/30"
+          <>
+            {/* Overlay для закрытия на мобильных */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 sm:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-20 sm:top-full sm:mt-2 w-auto sm:w-72 z-50"
             >
-              {/* Кнопка закрытия */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full 
-                  bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 
-                  transition-colors z-10"
-              >
-                <FaTimes className="w-3 h-3 text-secondary dark:text-dark-secondary" />
-              </button>
+              <div className="p-4 rounded-2xl bg-white/95 dark:bg-black/80 backdrop-blur-xl 
+                border border-black/10 dark:border-white/10 shadow-xl shadow-black/10 dark:shadow-black/30">
+                
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full 
+                    bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 transition-colors z-10"
+                >
+                  <FaTimes className="w-4 h-4 text-primary dark:text-dark-primary" />
+                </button>
 
-              {/* Заголовок */}
               <p className="text-xs text-secondary dark:text-dark-secondary mb-2">
                 {language === "ru" ? "Мини-плеер" : "Mini Player"}
               </p>
 
-              {/* Описание */}
               <p className="text-xs text-secondary/70 dark:text-dark-secondary/70 mb-4 leading-relaxed pr-6">
                 {language === "ru" 
                   ? "Здесь оставил свою любимую песню, откуда и взял основную аватарку :) Можете послушать пока гуляете по портфолио"
                   : "Here's my favorite song, where I got my main avatar from :) Feel free to listen while browsing my portfolio"}
               </p>
 
-              {/* Обложка - большая квадратная */}
               <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4 
-                bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800"
-              >
+                bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
                 {trackMeta.cover ? (
-                  <img
-                    src={trackMeta.cover}
-                    alt={trackMeta.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={trackMeta.cover} alt={trackMeta.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <FaMusic className="w-16 h-16 text-gray-400 dark:text-gray-500" />
@@ -212,35 +262,34 @@ export function MusicPlayer() {
                 )}
               </div>
 
-              {/* Название и артист */}
               <div className="text-center mb-4">
-                <p className="text-sm font-medium text-primary dark:text-dark-primary truncate">
-                  {trackMeta.title}
-                </p>
-                <p className="text-xs text-secondary dark:text-dark-secondary truncate">
-                  {trackMeta.artist}
-                </p>
+                <p className="text-sm font-medium text-primary dark:text-dark-primary truncate">{trackMeta.title}</p>
+                <p className="text-xs text-secondary dark:text-dark-secondary truncate">{trackMeta.artist}</p>
               </div>
 
-              {/* Прогресс бар */}
+              {/* Progress bar with draggable thumb */}
               <div
-                className="h-1 bg-black/10 dark:bg-white/10 rounded-full cursor-pointer mb-2 overflow-hidden"
-                onClick={handleSeek}
+                ref={progressRef}
+                className="relative h-2 bg-black/10 dark:bg-white/10 rounded-full cursor-pointer mb-2 group"
+                onMouseDown={handleProgressMouseDown}
+                onTouchStart={handleProgressTouchStart}
               >
-                <motion.div
-                  className="h-full bg-black/60 dark:bg-white/60 rounded-full"
+                <div
+                  className="absolute left-0 top-0 h-full bg-black/60 dark:bg-white/60 rounded-full transition-all duration-75"
                   style={{ width: `${progress}%` }}
-                  transition={{ duration: 0.1 }}
+                />
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-black dark:bg-white rounded-full shadow-md
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  style={{ left: `calc(${progress}% - 8px)` }}
                 />
               </div>
 
-              {/* Время */}
               <div className="flex items-center justify-between text-[10px] text-secondary dark:text-dark-secondary mb-4">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
 
-              {/* Play/Pause по центру */}
               <div className="flex justify-center mb-4">
                 <motion.button
                   onClick={togglePlay}
@@ -248,74 +297,46 @@ export function MusicPlayer() {
                     bg-black dark:bg-white hover:scale-105 transition-transform"
                   whileTap={{ scale: 0.95 }}
                 >
-                  <AnimatePresence mode="wait">
-                    {isPlaying ? (
-                      <motion.div
-                        key="pause"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <FaPause className="w-5 h-5 text-white dark:text-black" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="play"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <FaPlay className="w-5 h-5 text-white dark:text-black ml-0.5" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {isPlaying ? (
+                    <FaPause className="w-5 h-5 text-white dark:text-black" />
+                  ) : (
+                    <FaPlay className="w-5 h-5 text-white dark:text-black ml-0.5" />
+                  )}
                 </motion.button>
               </div>
 
-              {/* Громкость */}
+              {/* Volume with draggable thumb */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleMute}
                   className="w-6 h-6 flex items-center justify-center text-secondary dark:text-dark-secondary 
                     hover:text-primary dark:hover:text-dark-primary transition-colors flex-shrink-0"
                 >
-                  {isMuted || volume === 0 ? (
-                    <FaVolumeMute className="w-4 h-4" />
-                  ) : (
-                    <FaVolumeUp className="w-4 h-4" />
-                  )}
+                  {isMuted || volume === 0 ? <FaVolumeMute className="w-4 h-4" /> : <FaVolumeUp className="w-4 h-4" />}
                 </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={isMuted ? 0 : volume}
-                  onChange={handleVolumeChange}
-                  className="flex-1 h-1 bg-black/10 dark:bg-white/10 rounded-full appearance-none cursor-pointer
-                    [&::-webkit-slider-thumb]:appearance-none
-                    [&::-webkit-slider-thumb]:w-3
-                    [&::-webkit-slider-thumb]:h-3
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-webkit-slider-thumb]:bg-black
-                    dark:[&::-webkit-slider-thumb]:bg-white
-                    [&::-webkit-slider-thumb]:cursor-pointer
-                    [&::-moz-range-thumb]:w-3
-                    [&::-moz-range-thumb]:h-3
-                    [&::-moz-range-thumb]:rounded-full
-                    [&::-moz-range-thumb]:bg-black
-                    dark:[&::-moz-range-thumb]:bg-white
-                    [&::-moz-range-thumb]:border-0
-                    [&::-moz-range-thumb]:cursor-pointer"
-                />
+                <div
+                  ref={volumeRef}
+                  className="relative flex-1 h-2 bg-black/10 dark:bg-white/10 rounded-full cursor-pointer group"
+                  onMouseDown={handleVolumeMouseDown}
+                  onTouchStart={handleVolumeTouchStart}
+                >
+                  <div
+                    className="absolute left-0 top-0 h-full bg-black/60 dark:bg-white/60 rounded-full transition-all duration-75"
+                    style={{ width: `${volumePercent}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-black dark:bg-white rounded-full shadow-md
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    style={{ left: `calc(${volumePercent}% - 6px)` }}
+                  />
+                </div>
                 <span className="text-[10px] text-secondary dark:text-dark-secondary w-8 text-right flex-shrink-0">
-                  {Math.round((isMuted ? 0 : volume) * 100)}%
+                  {Math.round(volumePercent)}%
                 </span>
               </div>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
