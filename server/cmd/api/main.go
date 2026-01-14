@@ -23,11 +23,18 @@ func main() {
 		port = "8080"
 	}
 
-	// Content repository (JSON file)
-	contentRepo, err := repository.NewContentRepository("data/content.json")
-	if err != nil {
-		log.Fatalf("Failed to init content repository: %v", err)
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		dbURL = "postgres://user:pass@localhost:5432/dbname?sslmode=disable"
 	}
+
+	// Connect to PostgreSQL
+	ctx := context.Background()
+	repo, err := repository.NewPostgresRepository(ctx, dbURL)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer repo.Close()
 
 	r := chi.NewRouter()
 
@@ -43,7 +50,8 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	contentHandler := handler.NewContentHandler(contentRepo)
+	contentHandler := handler.NewContentHandler(repo)
+	analyticsHandler := handler.NewAnalyticsHandler(repo)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +66,9 @@ func main() {
 		r.Get("/content/skills", contentHandler.GetSkills)
 		r.Get("/content/contacts", contentHandler.GetContacts)
 
+		// Analytics tracking (public)
+		r.Post("/analytics/track", analyticsHandler.Track)
+
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(contentHandler.AuthMiddleware)
@@ -65,6 +76,7 @@ func main() {
 			r.Put("/content/projects", contentHandler.UpdateProjects)
 			r.Put("/content/skills", contentHandler.UpdateSkills)
 			r.Put("/content/contacts", contentHandler.UpdateContacts)
+			r.Get("/analytics", analyticsHandler.GetAnalytics)
 		})
 	})
 
@@ -88,10 +100,10 @@ func main() {
 
 	log.Println("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 

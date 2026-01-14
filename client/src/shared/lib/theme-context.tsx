@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { trackTheme } from "./analytics";
 
 type Theme = "light" | "dark";
 
@@ -33,7 +32,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (mounted) {
       document.documentElement.classList.toggle("dark", theme === "dark");
       localStorage.setItem("theme", theme);
-      trackTheme(theme);
     }
   }, [theme, mounted]);
 

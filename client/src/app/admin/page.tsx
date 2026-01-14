@@ -10,7 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/shared/lib/language-context";
 import { GridBackground } from "@/shared/ui/grid-background";
-import { getAnalyticsData, type AnalyticsData } from "@/shared/lib/analytics";
+import { getAnalytics, type AnalyticsData } from "@/shared/api/analytics";
 import { LiquidGlass } from "@/shared/ui/liquid-glass";
 
 const pageNames: Record<string, string> = {
@@ -26,30 +26,59 @@ export default function AdminPage() {
   const { language } = useLanguage();
   const router = useRouter();
   const [data, setData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "pages" | "devices">("overview");
 
   useEffect(() => {
-    setData(getAnalyticsData());
+    const password = localStorage.getItem("admin_password") || "";
     
-    // Обновляем каждые 5 секунд
-    const interval = setInterval(() => {
-      setData(getAnalyticsData());
-    }, 5000);
+    const fetchData = async () => {
+      const result = await getAnalytics(password);
+      setData(result);
+      setLoading(false);
+    };
+
+    fetchData();
+    
+    // Обновляем каждые 10 секунд
+    const interval = setInterval(fetchData, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
     document.cookie = "admin_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("admin_password");
     router.push("/");
   };
 
-  if (!data) {
+  if (loading) {
     return (
       <>
         <GridBackground />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-secondary dark:text-dark-secondary">Загрузка...</div>
+        </div>
+      </>
+    );
+  }
+
+  if (!data) {
+    return (
+      <>
+        <GridBackground />
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-secondary dark:text-dark-secondary mb-4">
+              {language === "ru" ? "Не удалось загрузить аналитику" : "Failed to load analytics"}
+            </p>
+            <p className="text-xs text-secondary/50 dark:text-dark-secondary/50 mb-4">
+              Убедитесь что сервер запущен и пароль верный
+            </p>
+            <Link href="/admin/edit" className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+              Перейти к редактированию
+            </Link>
+          </div>
         </div>
       </>
     );
@@ -65,36 +94,36 @@ export default function AdminPage() {
   const stats = [
     {
       label: language === "ru" ? "Всего визитов" : "Total Visits",
-      value: data.totalVisits,
+      value: data.total_visits,
       icon: FaEye,
       color: "#3178C6",
-      change: data.todayVisits,
+      change: data.today_visits,
       changeLabel: language === "ru" ? "сегодня" : "today",
     },
     {
       label: language === "ru" ? "Уникальных" : "Unique Visitors",
-      value: data.uniqueVisitors,
+      value: data.unique_visitors,
       icon: FaUsers,
       color: "#8B5CF6",
       change: null,
     },
     {
       label: language === "ru" ? "Ср. время" : "Avg. Duration",
-      value: formatDuration(data.avgSessionDuration),
+      value: formatDuration(data.avg_session_duration),
       icon: FaClock,
       color: "#10B981",
       change: null,
     },
     {
       label: language === "ru" ? "За неделю" : "This Week",
-      value: data.weekVisits,
+      value: data.week_visits,
       icon: FaChartLine,
       color: "#F59E0B",
       change: null,
     },
   ];
 
-  const maxHourVisits = Math.max(...data.visitsByHour, 1);
+  const maxHourVisits = Math.max(...data.visits_by_hour, 1);
 
   return (
     <>
@@ -252,7 +281,7 @@ export default function AdminPage() {
                         {language === "ru" ? "Активность по часам" : "Hourly Activity"}
                       </h3>
                       <div className="flex items-end gap-1 h-32">
-                        {data.visitsByHour.map((visits, hour) => (
+                        {data.visits_by_hour.map((visits, hour) => (
                           <div
                             key={hour}
                             className="flex-1 flex flex-col items-center gap-1"
@@ -303,14 +332,14 @@ export default function AdminPage() {
                               {language === "ru" ? "Показатель отказов" : "Bounce Rate"}
                             </span>
                             <span className="text-primary dark:text-dark-primary font-medium">
-                              {data.bounceRate.toFixed(1)}%
+                              {data.bounce_rate.toFixed(1)}%
                             </span>
                           </div>
                           <div className="h-2 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                             <motion.div
                               className="h-full bg-gradient-to-r from-green-500 to-yellow-500 rounded-full"
                               initial={{ width: 0 }}
-                              animate={{ width: `${Math.min(data.bounceRate, 100)}%` }}
+                              animate={{ width: `${Math.min(data.bounce_rate, 100)}%` }}
                               transition={{ delay: 0.4, duration: 0.5 }}
                             />
                           </div>
@@ -390,13 +419,13 @@ export default function AdminPage() {
                     </h3>
                     
                     <div className="space-y-3">
-                      {data.topPages.length === 0 ? (
+                      {data.top_pages.length === 0 ? (
                         <p className="text-secondary dark:text-dark-secondary text-sm">
                           {language === "ru" ? "Пока нет данных" : "No data yet"}
                         </p>
                       ) : (
-                        data.topPages.map((page, index) => {
-                          const maxViews = data.topPages[0]?.views || 1;
+                        data.top_pages.map((page, index) => {
+                          const maxViews = data.top_pages[0]?.views || 1;
                           const percent = (page.views / maxViews) * 100;
                           
                           return (

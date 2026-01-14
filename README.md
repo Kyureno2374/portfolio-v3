@@ -13,15 +13,34 @@
 
 **Backend:**
 - Go (chi router)
-- JSON file storage
+- PostgreSQL (pgx)
 
 **Инфраструктура:**
-- Docker (PostgreSQL)
-- GitHub Actions
+- Docker
 
 ## Запуск
 
-### Frontend
+### 1. База данных
+
+```bash
+docker-compose up -d
+```
+
+Применить миграции:
+```bash
+psql -h localhost -U user -d dbname -f server/migrations/001_init.sql
+```
+
+### 2. Backend
+
+```bash
+cd server
+go run cmd/api/main.go
+```
+
+API: http://localhost:8080
+
+### 3. Frontend
 
 ```bash
 cd client
@@ -29,22 +48,7 @@ npm install
 npm run dev
 ```
 
-Открыть http://localhost:3000
-
-### Backend
-
-```bash
-cd server
-go run cmd/api/main.go
-```
-
-API доступен на http://localhost:8080
-
-### База данных (опционально)
-
-```bash
-docker-compose up -d
-```
+Сайт: http://localhost:3000
 
 ## Переменные окружения
 
@@ -57,24 +61,16 @@ ADMIN_PASSWORD=your_password
 **server/.env:**
 ```
 SERVER_PORT=8080
+DB_URL=postgres://user:pass@localhost:5432/dbname?sslmode=disable
 ADMIN_PASSWORD=your_password
 ```
 
 ## Структура
 
 ```
-client/           # Next.js приложение (FSD архитектура)
-  src/
-    app/          # Страницы
-    widgets/      # Виджеты (Header, Footer)
-    features/     # Фичи (ThemeToggle, MusicPlayer)
-    entities/     # Сущности (Navigation)
-    shared/       # Общий код (UI, API, lib)
-
+client/           # Next.js (FSD)
 server/           # Go API
-  cmd/api/        # Точка входа
-  internal/       # Внутренняя логика
-  data/           # JSON хранилище
+  migrations/     # SQL миграции
 ```
 
 ## Лицензия

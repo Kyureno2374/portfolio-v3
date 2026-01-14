@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -10,10 +11,10 @@ import (
 )
 
 type ContentHandler struct {
-	repo *repository.ContentRepository
+	repo *repository.PostgresRepository
 }
 
-func NewContentHandler(repo *repository.ContentRepository) *ContentHandler {
+func NewContentHandler(repo *repository.PostgresRepository) *ContentHandler {
 	return &ContentHandler{repo: repo}
 }
 
@@ -34,13 +35,21 @@ func (h *ContentHandler) AuthMiddleware(next http.Handler) http.Handler {
 
 // GET /api/content - получить весь контент
 func (h *ContentHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	content := h.repo.GetAll()
+	content, err := h.repo.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, content)
 }
 
 // GET /api/content/about
 func (h *ContentHandler) GetAbout(w http.ResponseWriter, r *http.Request) {
-	about := h.repo.GetAbout()
+	about, err := h.repo.GetAbout(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, about)
 }
 
@@ -52,7 +61,7 @@ func (h *ContentHandler) UpdateAbout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repo.UpdateAbout(about); err != nil {
+	if err := h.repo.UpdateAbout(context.Background(), about); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -62,7 +71,11 @@ func (h *ContentHandler) UpdateAbout(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/content/projects
 func (h *ContentHandler) GetProjects(w http.ResponseWriter, r *http.Request) {
-	projects := h.repo.GetProjects()
+	projects, err := h.repo.GetProjects(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, projects)
 }
 
@@ -74,7 +87,7 @@ func (h *ContentHandler) UpdateProjects(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.repo.UpdateProjects(projects); err != nil {
+	if err := h.repo.UpdateProjects(context.Background(), projects); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -84,7 +97,11 @@ func (h *ContentHandler) UpdateProjects(w http.ResponseWriter, r *http.Request) 
 
 // GET /api/content/skills
 func (h *ContentHandler) GetSkills(w http.ResponseWriter, r *http.Request) {
-	skills := h.repo.GetSkills()
+	skills, err := h.repo.GetSkills(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, skills)
 }
 
@@ -96,7 +113,7 @@ func (h *ContentHandler) UpdateSkills(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repo.UpdateSkills(skills); err != nil {
+	if err := h.repo.UpdateSkills(context.Background(), skills); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +123,11 @@ func (h *ContentHandler) UpdateSkills(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/content/contacts
 func (h *ContentHandler) GetContacts(w http.ResponseWriter, r *http.Request) {
-	contacts := h.repo.GetContacts()
+	contacts, err := h.repo.GetContacts(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	respondJSON(w, http.StatusOK, contacts)
 }
 
@@ -118,7 +139,7 @@ func (h *ContentHandler) UpdateContacts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.repo.UpdateContacts(contacts); err != nil {
+	if err := h.repo.UpdateContacts(context.Background(), contacts); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
