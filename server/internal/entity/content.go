@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 type AboutContent struct {
 	ID        int64             `json:"id"`
 	Name      map[string]string `json:"name"`
@@ -8,7 +10,7 @@ type AboutContent struct {
 	Bio       map[string]string `json:"bio"`
 	Photo     string            `json:"photo"`
 	Stats     []Stat            `json:"stats"`
-	UpdatedAt string            `json:"updated_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
 }
 
 type Stat struct {
@@ -20,11 +22,13 @@ type Stat struct {
 
 type Project struct {
 	ID          string            `json:"id"`
-	Title       string            `json:"title"`
+	Title       map[string]string `json:"title"`
 	Description map[string]string `json:"description"`
+	Categories  []string          `json:"categories"`
 	Image       string            `json:"image"`
 	Tags        []string          `json:"tags"`
-	Links       ProjectLinks      `json:"links"`
+	Url         string            `json:"url"`
+	GlowColor   string            `json:"glowColor"`
 	Featured    bool              `json:"featured"`
 	Order       int               `json:"order"`
 }
@@ -42,11 +46,12 @@ type Skill struct {
 }
 
 type SkillCategory struct {
-	ID       string            `json:"id"`
-	Title    map[string]string `json:"title"`
-	Skills   []Skill           `json:"skills"`
-	Badge    map[string]string `json:"badge,omitempty"`
-	Order    int               `json:"order"`
+	ID         string            `json:"id"`
+	Title      map[string]string `json:"title"`
+	Skills     []Skill           `json:"skills"`
+	Badge      map[string]string `json:"badge,omitempty"`
+	IsLearning bool              `json:"isLearning,omitempty"`
+	Order      int               `json:"order"`
 }
 
 type Contact struct {

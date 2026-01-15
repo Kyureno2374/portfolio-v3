@@ -385,7 +385,7 @@ function SkillsEditor({ skills, onChange }: { skills: SkillCategory[]; onChange:
           </div>
           <InputField 
             label="Скиллы (формат: name:icon:color через запятую)" 
-            value={category.skills.map(s => `${s.name}:${s.icon}:${s.color}`).join(", ")} 
+            value={(category.skills || []).map(s => `${s.name}:${s.icon}:${s.color}`).join(", ")} 
             onChange={(v) => {
               const skills = v.split(",").map(s => {
                 const [name, icon, color] = s.trim().split(":");

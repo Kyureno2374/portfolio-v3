@@ -28,6 +28,7 @@ export default function LoginPage() {
       });
 
       if (res.ok) {
+        localStorage.setItem("admin_password", password);
         router.push("/admin");
       } else {
         setError(language === "ru" ? "Неверный пароль" : "Wrong password");

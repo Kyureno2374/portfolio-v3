@@ -9,7 +9,21 @@ import (
 
 // TrackPageView records a page view
 func (r *PostgresRepository) TrackPageView(ctx context.Context, page, visitorID, device string) error {
-	_, err := r.pool.Exec(ctx, `
+	// Check if this visitor already visited today
+	today := time.Now().Format("2006-01-02")
+	var existingVisits int
+	err := r.pool.QueryRow(ctx, `
+		SELECT COUNT(*) FROM page_views 
+		WHERE visitor_id = $1 AND DATE(created_at) = $2
+	`, visitorID, today).Scan(&existingVisits)
+	if err != nil {
+		return err
+	}
+
+	isNewVisitor := existingVisits == 0
+
+	// Insert page view
+	_, err = r.pool.Exec(ctx, `
 		INSERT INTO page_views (page, visitor_id, device)
 		VALUES ($1, $2, $3)
 	`, page, visitorID, device)
@@ -18,7 +32,6 @@ func (r *PostgresRepository) TrackPageView(ctx context.Context, page, visitorID,
 	}
 
 	// Update daily stats
-	today := time.Now().Format("2006-01-02")
 	deviceCol := "desktop_count"
 	if device == "mobile" {
 		deviceCol = "mobile_count"
@@ -26,25 +39,44 @@ func (r *PostgresRepository) TrackPageView(ctx context.Context, page, visitorID,
 		deviceCol = "tablet_count"
 	}
 
-	_, err = r.pool.Exec(ctx, `
-		INSERT INTO daily_stats (date, visits, unique_visitors, `+deviceCol+`)
-		VALUES ($1, 1, 1, 1)
-		ON CONFLICT (date) DO UPDATE SET
-			visits = daily_stats.visits + 1,
-			`+deviceCol+` = daily_stats.`+deviceCol+` + 1
-	`, today)
+	if isNewVisitor {
+		// New visitor today - increment visits, unique_visitors, and device count
+		_, err = r.pool.Exec(ctx, `
+			INSERT INTO daily_stats (date, visits, unique_visitors, `+deviceCol+`)
+			VALUES ($1, 1, 1, 1)
+			ON CONFLICT (date) DO UPDATE SET
+				visits = daily_stats.visits + 1,
+				unique_visitors = daily_stats.unique_visitors + 1,
+				`+deviceCol+` = daily_stats.`+deviceCol+` + 1
+		`, today)
+	} else {
+		// Returning visitor - only increment visits
+		_, err = r.pool.Exec(ctx, `
+			INSERT INTO daily_stats (date, visits, unique_visitors, `+deviceCol+`)
+			VALUES ($1, 1, 0, 0)
+			ON CONFLICT (date) DO UPDATE SET
+				visits = daily_stats.visits + 1
+		`, today)
+	}
 
 	return err
 }
 
 // TrackSession updates or creates a session
 func (r *PostgresRepository) TrackSession(ctx context.Context, visitorID string, duration, pages int, theme, language string) error {
-	_, err := r.pool.Exec(ctx, `
+	// Check if session already exists
+	var exists bool
+	err := r.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM sessions WHERE visitor_id = $1)`, visitorID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(ctx, `
 		INSERT INTO sessions (visitor_id, duration_seconds, pages_count, theme, language)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (visitor_id) DO UPDATE SET
-			duration_seconds = $2,
-			pages_count = $3,
+			duration_seconds = GREATEST(sessions.duration_seconds, $2),
+			pages_count = GREATEST(sessions.pages_count, $3),
 			theme = $4,
 			language = $5,
 			updated_at = CURRENT_TIMESTAMP
@@ -54,24 +86,26 @@ func (r *PostgresRepository) TrackSession(ctx context.Context, visitorID string,
 		return err
 	}
 
-	// Update daily theme/language stats
-	today := time.Now().Format("2006-01-02")
-	themeCol := "light_theme"
-	if theme == "dark" {
-		themeCol = "dark_theme"
-	}
-	langCol := "lang_ru"
-	if language == "en" {
-		langCol = "lang_en"
-	}
+	// Only update theme/language stats for new sessions
+	if !exists {
+		today := time.Now().Format("2006-01-02")
+		themeCol := "light_theme"
+		if theme == "dark" {
+			themeCol = "dark_theme"
+		}
+		langCol := "lang_ru"
+		if language == "en" {
+			langCol = "lang_en"
+		}
 
-	_, err = r.pool.Exec(ctx, `
-		INSERT INTO daily_stats (date, visits, `+themeCol+`, `+langCol+`)
-		VALUES ($1, 0, 1, 1)
-		ON CONFLICT (date) DO UPDATE SET
-			`+themeCol+` = daily_stats.`+themeCol+` + 1,
-			`+langCol+` = daily_stats.`+langCol+` + 1
-	`, today)
+		_, err = r.pool.Exec(ctx, `
+			INSERT INTO daily_stats (date, visits, `+themeCol+`, `+langCol+`)
+			VALUES ($1, 0, 1, 1)
+			ON CONFLICT (date) DO UPDATE SET
+				`+themeCol+` = daily_stats.`+themeCol+` + 1,
+				`+langCol+` = daily_stats.`+langCol+` + 1
+		`, today)
+	}
 
 	return err
 }

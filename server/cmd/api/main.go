@@ -12,12 +12,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 
 	"server/internal/handler"
 	"server/internal/repository"
 )
 
 func main() {
+	_ = godotenv.Load()
+
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
 		port = "8080"
@@ -42,7 +45,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://kyureno.dev"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://25.35.130.121:3000", "https://kyureno.dev"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Admin-Password"},
 		ExposedHeaders:   []string{"Link"},
