@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import { FaCode, FaGraduationCap } from "react-icons/fa";
 import { useLanguage } from "@/shared/lib/language-context";
@@ -17,6 +18,57 @@ const pageContent = {
     description: "I build fast, reliable and scalable web platforms. On the frontend I use TypeScript, React and Next.js, on the backend — Go, Python and Node.js. I have experience with CI/CD, containerization and modern deployment environments. I strive for efficient and maintainable infrastructure.",
   },
 };
+
+function SkillsContent() {
+  const { language } = useLanguage();
+  const content = pageContent[language];
+
+  return (
+    <div className="space-y-12">
+      {skillCategories.map((category, categoryIndex) => (
+        <motion.div
+          key={category.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: categoryIndex * 0.15,
+            duration: 0.5,
+            ease: [0.25, 0.46, 0.45, 0.94],
+          }}
+        >
+          {/* Заголовок категории */}
+          <h2 className="text-xl md:text-2xl font-semibold text-primary dark:text-dark-primary mb-6 flex items-center gap-3">
+            {category.isLearning ? (
+              <>
+                <div className="w-1 h-6 rounded-full bg-gradient-to-b from-green-500 to-emerald-500" />
+                <FaGraduationCap className="w-5 h-5 text-green-500" />
+              </>
+            ) : (
+              <div className="w-1 h-6 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+            )}
+            {language === "ru" ? category.titleRu : category.titleEn}
+            {category.isLearning && (
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium text-green-500 bg-green-500/10 rounded-full border border-green-500/20">
+                {language === "ru" ? "в процессе" : "in progress"}
+              </span>
+            )}
+          </h2>
+
+          {/* Сетка скиллов */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {category.skills.map((skill, skillIndex) => (
+              <SkillCard
+                key={skill.name}
+                skill={skill}
+                index={skillIndex}
+              />
+            ))}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
 export default function SkillsPage() {
   const { language } = useLanguage();
@@ -47,50 +99,20 @@ export default function SkillsPage() {
             </p>
           </motion.div>
 
-          {/* Категории скиллов */}
-          <div className="space-y-12">
-            {skillCategories.map((category, categoryIndex) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: categoryIndex * 0.15,
-                  duration: 0.5,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                }}
-              >
-                {/* Заголовок категории */}
-                <h2 className="text-xl md:text-2xl font-semibold text-primary dark:text-dark-primary mb-6 flex items-center gap-3">
-                  {category.isLearning ? (
-                    <>
-                      <div className="w-1 h-6 rounded-full bg-gradient-to-b from-green-500 to-emerald-500" />
-                      <FaGraduationCap className="w-5 h-5 text-green-500" />
-                    </>
-                  ) : (
-                    <div className="w-1 h-6 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
-                  )}
-                  {language === "ru" ? category.titleRu : category.titleEn}
-                  {category.isLearning && (
-                    <span className="ml-2 px-2 py-0.5 text-xs font-medium text-green-500 bg-green-500/10 rounded-full border border-green-500/20">
-                      {language === "ru" ? "в процессе" : "in progress"}
-                    </span>
-                  )}
-                </h2>
-
-                {/* Сетка скиллов */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {category.skills.map((skill, skillIndex) => (
-                    <SkillCard
-                      key={skill.name}
-                      skill={skill}
-                      index={skillIndex}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Категории скиллов с Suspense */}
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full" />
+                <div className="absolute inset-0 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" />
+              </div>
+              <p className="text-sm text-secondary dark:text-dark-secondary">
+                Загрузка скиллов...
+              </p>
+            </div>
+          }>
+            <SkillsContent />
+          </Suspense>
         </div>
       </div>
     </>

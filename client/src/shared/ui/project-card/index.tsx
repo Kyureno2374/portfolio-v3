@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -12,7 +13,7 @@ interface ProjectCardProps {
   index: number;
 }
 
-export function ProjectCard({ project, index }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({ project, index }: ProjectCardProps) {
   const { language } = useLanguage();
   
   const title = language === "ru" ? project.titleRu : project.titleEn;
@@ -52,7 +53,9 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
               src={project.image}
               alt={title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover object-top transition-all duration-500 ease-out group-hover:scale-[1.03] group-hover:opacity-40 opacity-30"
+              priority={index < 2}
             />
           </div>
 
@@ -131,4 +134,4 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
       </Link>
     </motion.div>
   );
-}
+});

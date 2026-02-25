@@ -23,6 +23,8 @@ export default function ProjectsPage() {
   const { language } = useLanguage();
   const content = pageContent[language];
 
+  // TODO: Добавить сортировку по стеку/технологиям
+
   return (
     <>
       <GridBackground />
@@ -54,6 +56,20 @@ export default function ProjectsPage() {
               <ProjectCard key={project.id} project={project} index={index} />
             ))}
           </div>
+
+          {/* Текст в конце */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mt-16 text-center"
+          >
+            <p className="text-base md:text-lg text-secondary/70 dark:text-dark-secondary/70 italic">
+              {language === "ru" 
+                ? "И это не все мои проекты... Если будет желание, добавлю абсолютно все" 
+                : "And these are not all my projects... If I feel like it, I'll add absolutely everything"}
+            </p>
+          </motion.div>
         </div>
       </div>
     </>

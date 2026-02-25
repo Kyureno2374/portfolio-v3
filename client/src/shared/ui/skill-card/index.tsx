@@ -1,10 +1,61 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Skill } from "@/shared/config/skills";
-import * as SiIcons from "react-icons/si";
-import * as FaIcons from "react-icons/fa";
 import { IconType } from "react-icons";
+import {
+  SiTypescript,
+  SiJavascript,
+  SiReact,
+  SiNextdotjs,
+  SiVuedotjs,
+  SiNuxtdotjs,
+  SiTailwindcss,
+  SiSass,
+  SiFramer,
+  SiRedux,
+  SiReactquery,
+  SiHtml5,
+  SiCss3,
+  SiElectron,
+  SiGo,
+  SiPython,
+  SiNodedotjs,
+  SiRust,
+  SiPostgresql,
+  SiMongodb,
+  SiRedis,
+  SiMysql,
+  SiGraphql,
+  SiPrisma,
+  SiExpress,
+  SiFastify,
+  SiFastapi,
+  SiDocker,
+  SiGit,
+  SiGithub,
+  SiGithubactions,
+  SiLinux,
+  SiGnubash,
+  SiNginx,
+  SiVercel,
+  SiAmazonaws,
+  SiCloudflare,
+  SiVite,
+  SiWebpack,
+  SiEslint,
+  SiPrettier,
+  SiJest,
+  SiApachespark,
+  SiApachekafka,
+  SiApacheairflow,
+  SiClickhouse,
+  SiDatabricks,
+  SiSnowflake,
+  SiDiagramsdotnet,
+} from "react-icons/si";
+import { FaJava } from "react-icons/fa";
 
 interface SkillCardProps {
   skill: Skill;
@@ -12,11 +63,59 @@ interface SkillCardProps {
 }
 
 const iconMap: Record<string, IconType> = {
-  ...SiIcons,
-  ...FaIcons,
+  SiTypescript,
+  SiJavascript,
+  SiReact,
+  SiNextdotjs,
+  SiVuedotjs,
+  SiNuxtdotjs,
+  SiTailwindcss,
+  SiSass,
+  SiFramer,
+  SiRedux,
+  SiReactquery,
+  SiHtml5,
+  SiCss3,
+  SiElectron,
+  SiGo,
+  SiPython,
+  SiNodedotjs,
+  SiRust,
+  FaJava,
+  SiPostgresql,
+  SiMongodb,
+  SiRedis,
+  SiMysql,
+  SiGraphql,
+  SiPrisma,
+  SiExpress,
+  SiFastify,
+  SiFastapi,
+  SiDocker,
+  SiGit,
+  SiGithub,
+  SiGithubactions,
+  SiLinux,
+  SiGnubash,
+  SiNginx,
+  SiVercel,
+  SiAmazonaws,
+  SiCloudflare,
+  SiVite,
+  SiWebpack,
+  SiEslint,
+  SiPrettier,
+  SiJest,
+  SiApachespark,
+  SiApachekafka,
+  SiApacheairflow,
+  SiClickhouse,
+  SiDatabricks,
+  SiSnowflake,
+  SiDiagramsdotnet,
 };
 
-export function SkillCard({ skill, index }: SkillCardProps) {
+export const SkillCard = memo(function SkillCard({ skill, index }: SkillCardProps) {
   const Icon = iconMap[skill.icon];
 
   return (
@@ -67,4 +166,4 @@ export function SkillCard({ skill, index }: SkillCardProps) {
       </div>
     </motion.div>
   );
-}
+});

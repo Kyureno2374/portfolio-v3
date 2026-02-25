@@ -20,6 +20,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" suppressHydrationWarning>
+      <head>
+        {/* Preload критичных ресурсов */}
+        <link rel="preload" href="/logo.png" as="image" />
+        <link rel="preload" href="/portfolio.jpg" as="image" />
+        <link rel="preload" href="/oll.jpg" as="image" />
+        {/* Prefetch страниц */}
+        <link rel="prefetch" href="/projects" />
+        <link rel="prefetch" href="/skills" />
+        <link rel="prefetch" href="/contact" />
+      </head>
       <body className="antialiased bg-background dark:bg-dark-bg text-primary dark:text-dark-primary transition-colors duration-300">
         <Providers>
           <div className="flex flex-col min-h-screen">

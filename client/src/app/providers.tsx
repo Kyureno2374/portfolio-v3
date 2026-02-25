@@ -1,9 +1,10 @@
 "use client";
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode } from "react";
 import { ThemeProvider } from "@/shared/lib/theme-context";
 import { LanguageProvider } from "@/shared/lib/language-context";
 import { useAnalytics } from "@/shared/lib/use-analytics";
+import { PageLoader } from "@/shared/ui/page-loader";
 
 function AnalyticsTracker() {
   useAnalytics();
@@ -11,19 +12,10 @@ function AnalyticsTracker() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <ThemeProvider>
       <LanguageProvider>
+        <PageLoader />
         <AnalyticsTracker />
         {children}
       </LanguageProvider>
