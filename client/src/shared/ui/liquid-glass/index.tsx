@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useRef } from "react";
+import { ReactNode, useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface LiquidGlassProps {
@@ -25,25 +25,26 @@ export function LiquidGlass({
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const prefersReducedMotion = 
-    typeof window !== "undefined" && 
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  useEffect(() => {
+    setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) setIsMobile(true);
+  }, []);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isInteractive || prefersReducedMotion || !containerRef.current) return;
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isInteractive || isMobile || !containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
     setMousePosition({ x, y });
-  };
+  }, [isInteractive, isMobile]);
 
-  const currentBlur = prefersReducedMotion 
-    ? blurAmount * 0.5 
-    : isHovered 
-      ? blurAmount * 1.2 
-      : blurAmount;
+  const mobileBlur = Math.min(blurAmount * 6, 10);
+  const desktopBlur = isHovered ? blurAmount * 12 : blurAmount * 10;
+  const currentBlur = isMobile ? mobileBlur : desktopBlur;
 
   const gradientX = mousePosition.x * 100;
   const gradientY = mousePosition.y * 100;
@@ -52,8 +53,8 @@ export function LiquidGlass({
     <motion.div
       ref={containerRef}
       className={`relative ${className}`}
-      style={{ borderRadius: cornerRadius }}
-      onMouseEnter={() => setIsHovered(true)}
+      style={{ borderRadius: cornerRadius, contain: "layout style" }}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setMousePosition({ x: 0.5, y: 0.5 });
@@ -61,7 +62,7 @@ export function LiquidGlass({
       onMouseMove={handleMouseMove}
       initial={false}
       animate={{
-        scale: isHovered && isInteractive && !prefersReducedMotion ? 1.01 : 1,
+        scale: isHovered && isInteractive && !isMobile ? 1.01 : 1,
       }}
       transition={{
         type: "spring",
@@ -70,18 +71,16 @@ export function LiquidGlass({
         mass: 0.8,
       }}
     >
-      {/* Основной backdrop blur */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backdropFilter: `blur(${currentBlur * 10}px) saturate(180%)`,
-          WebkitBackdropFilter: `blur(${currentBlur * 10}px) saturate(180%)`,
+          backdropFilter: `blur(${currentBlur}px) saturate(${isMobile ? 140 : 180}%)`,
+          WebkitBackdropFilter: `blur(${currentBlur}px) saturate(${isMobile ? 140 : 180}%)`,
           borderRadius: cornerRadius,
-          transition: "backdrop-filter 0.4s ease",
+          transition: isMobile ? "none" : "backdrop-filter 0.4s ease",
         }}
       />
 
-      {/* Градиент преломления света - симметричный */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -99,8 +98,8 @@ export function LiquidGlass({
         }}
       />
 
-      {/* Интерактивное свечение от курсора */}
-      {isInteractive && (
+      {/* Интерактивное свечение — только на десктопе */}
+      {isInteractive && !isMobile && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -117,19 +116,20 @@ export function LiquidGlass({
         />
       )}
 
-      {/* Граница и тени */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           borderRadius: cornerRadius,
-          boxShadow: `
-            inset 0 0.5px 0 rgba(255, 255, 255, 0.15),
-            inset 0 -0.5px 0 rgba(0, 0, 0, 0.05),
-            0 8px 32px rgba(0, 0, 0, 0.08),
-            0 2px 8px rgba(0, 0, 0, 0.04)
-          `,
+          boxShadow: isMobile
+            ? `inset 0 0.5px 0 rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.06)`
+            : `
+              inset 0 0.5px 0 rgba(255, 255, 255, 0.15),
+              inset 0 -0.5px 0 rgba(0, 0, 0, 0.05),
+              0 8px 32px rgba(0, 0, 0, 0.08),
+              0 2px 8px rgba(0, 0, 0, 0.04)
+            `,
           border: "1px solid rgba(255, 255, 255, 0.15)",
-          transition: "box-shadow 0.4s ease",
+          transition: isMobile ? "none" : "box-shadow 0.4s ease",
         }}
       />
 

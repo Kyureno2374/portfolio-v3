@@ -120,10 +120,11 @@ export const SkillCard = memo(function SkillCard({ skill, index }: SkillCardProp
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, margin: "-30px" }}
       transition={{
-        delay: index * 0.03,
+        delay: (index % 5) * 0.03,
         duration: 0.3,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
@@ -131,7 +132,7 @@ export const SkillCard = memo(function SkillCard({ skill, index }: SkillCardProp
       className="group relative"
     >
       <div
-        className="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 dark:bg-white/[0.03] border border-white/10 dark:border-white/5 backdrop-blur-sm transition-all duration-300 hover:border-white/20 dark:hover:border-white/10"
+        className="relative flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 dark:bg-white/[0.03] border border-white/10 dark:border-white/5 md:backdrop-blur-sm transition-all duration-300 hover:border-white/20 dark:hover:border-white/10"
         style={{
           boxShadow: `0 0 0 1px transparent`,
         }}

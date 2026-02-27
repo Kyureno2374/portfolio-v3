@@ -31,6 +31,17 @@ export default function RootLayout({
         <link rel="prefetch" href="/contact" />
       </head>
       <body className="antialiased bg-background dark:bg-dark-bg text-primary dark:text-dark-primary transition-colors duration-300">
+        {process.env.NEXT_PUBLIC_YM_ID && (
+          <noscript>
+            <div>
+              <img
+                src={`https://mc.yandex.ru/watch/${process.env.NEXT_PUBLIC_YM_ID}`}
+                style={{ position: "absolute", left: "-9999px" }}
+                alt=""
+              />
+            </div>
+          </noscript>
+        )}
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Header />

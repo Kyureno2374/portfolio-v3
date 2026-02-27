@@ -60,8 +60,9 @@ export default function ProjectsPage() {
           {/* Текст в конце */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
             className="mt-16 text-center"
           >
             <p className="text-base md:text-lg text-secondary/70 dark:text-dark-secondary/70 italic">

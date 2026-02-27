@@ -31,7 +31,12 @@ export function MusicPlayer() {
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
+  const metadataLoaded = useRef(false);
+
   useEffect(() => {
+    if (!isOpen || metadataLoaded.current) return;
+    metadataLoaded.current = true;
+
     const loadMetadata = async () => {
       try {
         const response = await fetch("/popal.mp3");
@@ -42,8 +47,8 @@ export function MusicPlayer() {
         const picture = metadata.common.picture?.[0];
         if (picture) {
           const uint8Array = new Uint8Array(picture.data);
-          const blob = new Blob([uint8Array], { type: picture.format });
-          coverUrl = URL.createObjectURL(blob);
+          const coverBlob = new Blob([uint8Array], { type: picture.format });
+          coverUrl = URL.createObjectURL(coverBlob);
         }
 
         setTrackMeta({
@@ -61,10 +66,17 @@ export function MusicPlayer() {
     };
 
     loadMetadata();
-  }, []);
+  }, [isOpen]);
+
+  const audioInitialized = useRef(false);
 
   useEffect(() => {
-    const audio = new Audio("/popal.mp3");
+    if (audioInitialized.current) return;
+    audioInitialized.current = true;
+
+    const audio = new Audio();
+    audio.preload = "metadata";
+    audio.src = "/popal.mp3";
     audio.volume = 0.3;
     audioRef.current = audio;
 
