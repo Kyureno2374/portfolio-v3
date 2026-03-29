@@ -46,7 +46,7 @@ export default function HomePage() {
               transition={{ duration: 0.3 }}
             >
               <Image
-                src="/logo.png"
+                src="/logo.jpg"
                 alt="Kyureno"
                 width={128}
                 height={128}
